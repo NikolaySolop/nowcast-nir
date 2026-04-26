@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nowcast}
+      POSTGRES_USER: ${POSTGRES_USER:-nowcast}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nowcast}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nowcast} -d ${POSTGRES_DB:-nowcast}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ingestion-worker:
+    build: .
+    command: python -m ingestion.runner
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      POSTGRES_DB: ${POSTGRES_DB:-nowcast}
+      POSTGRES_USER: ${POSTGRES_USER:-nowcast}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nowcast}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-nowcast}:${POSTGRES_PASSWORD:-nowcast}@postgres:5432/${POSTGRES_DB:-nowcast}
+      AUTO_CREATE_TABLES: ${AUTO_CREATE_TABLES:-true}
+      INGESTION_SOURCE_TIMEOUT_SECONDS: ${INGESTION_SOURCE_TIMEOUT_SECONDS:-30}
+      PYTHONPATH: /app/src
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
