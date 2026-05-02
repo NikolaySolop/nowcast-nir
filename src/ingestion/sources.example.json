@@ -1,0 +1,14 @@
+[
+  {
+    "name": "vix_15m",
+    "source_code": "TRADINGVIEW",
+    "source_type": "tradingview_vix",
+    "series_code": "VIX",
+    "series_name": "CBOE Volatility Index",
+    "vendor_symbol": "TVC:VIX",
+    "vendor_frequency": "15m",
+    "native_frequency": "15m",
+    "timezone": "UTC",
+    "is_primary": true
+  }
+]

@@ -1,6 +1,13 @@
-"""Repository functions for reading and writing domain data."""
+from sqlalchemy import func, select
 
-from datetime import datetime, timezone
+from storage.models import (
+    DataSource,
+    IngestionRun,
+    MarketBar30m,
+    RawPayload,
+    Series,
+    SourceSeriesMap,
+)
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -58,3 +65,19 @@ def add_raw_observation(
     )
     session.add(observation)
     return observation
+
+
+def get_latest_market_observed_at(
+    session: Session,
+    *,
+    series_id: int,
+    source_id: int,
+) -> datetime | None:
+    """Return latest candle observed_at (interval_end) for series and source."""
+
+    return session.scalar(
+        select(func.max(MarketBar30m.interval_end)).where(
+            MarketBar30m.series_id == series_id,
+            MarketBar30m.source_id == source_id,
+        ),
+    )
